@@ -295,6 +295,7 @@ public class ValueAnalysisTransferRelation
   protected ValueAnalysisState handleFunctionCallEdge(FunctionCallEdge callEdge,
       List<? extends AExpression> arguments, List<? extends AParameterDeclaration> parameters,
       String calledFunctionName) throws UnrecognizedCodeException {
+    // TODO christoph: dieser state braucht das flag -> visit again
     ValueAnalysisState newElement = ValueAnalysisState.copyOf(state);
 
     assert (parameters.size() == arguments.size())
@@ -326,7 +327,7 @@ public class ValueAnalysisTransferRelation
         if (isMissingCExpressionInformation(visitor, exp)) {
           addMissingInformation(formalParamName, exp);
         }
-
+        // TODO christoph an dieser Stelle steht fest, dass startzustand nichtdeterministisch
         unknownValueHandler.handle(formalParamName, paramType, newElement, visitor);
 
       } else {

@@ -94,6 +94,10 @@ public class ValueAnalysisCPA extends AbstractCPA
      * will be created, but not evaluated.
      */
     INTRODUCE_SYMBOLIC,
+    /**
+     * This strategy fills each unknown value with a random one.
+     */
+    RANDOM_VALUE,
   }
 
   @Option(secure=true, name="merge", toUppercase=true, values={"SEP", "JOIN"},
@@ -173,6 +177,10 @@ public class ValueAnalysisCPA extends AbstractCPA
         return new UnknownValueAssigner();
       case INTRODUCE_SYMBOLIC:
         return new SymbolicValueAssigner(config);
+      case RANDOM_VALUE:
+        return new RandomValueAssigner();
+      // TODO build new Value Assigner
+      // Rechnet die Path constraintes aus -> gegeben ein INput, läuft den lang
       default:
         throw new AssertionError("Unhandled strategy: " + unknownValueStrategy);
     }
