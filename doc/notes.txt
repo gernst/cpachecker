@@ -1,0 +1,17 @@
+1. Informationen recherschieren welche Informationen in dem reachedset drin sind.
+2. RandomUnknownValueHandler bauen und als UnknownValueHandler setzen.
+3. Zustände markieren in denen nichtdeterministische Eintscheidungen getroffen werden in ValueCPA / ValueAnalysisState
+4. Zustand vor dem markierten zustand muss nochmal besucht werden: die müssen am ende gesucht werden.
+    -> über das reachedset.reAddToWaitlist()
+10. 10x mal wiederholen.
+
+1. handle() interface ändern und auch vorgänger zustand übergeben und markieren, wenn nicht vorhanden: throw Exception
+2. korrekten Wrapped state wieder zur watchlist (überprüfen)
+3. C-Program: 2 vars -> 1 var mit finalen zuständen (0 oder 1); andere wird nondeterm gewählt
+4. predicatecpa muss formel haben, welche constraints die zustände haben -> gibts das?; sollte nicht von konkreten werten abhängen
+
+
+
+Plan: Random sampling
+
+reachedSet ist Liste von States. Aus jedem State kann man alle var-Zustände ziehen.
