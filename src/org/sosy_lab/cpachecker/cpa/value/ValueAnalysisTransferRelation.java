@@ -329,6 +329,8 @@ public class ValueAnalysisTransferRelation
         }
         // TODO christoph an dieser Stelle steht fest, dass startzustand nichtdeterministisch
         unknownValueHandler.handle(formalParamName, paramType, newElement, visitor);
+        System.err.println(newElement.nonDeterministicMark);
+        state.nonDeterministicMark = newElement.nonDeterministicMark;
 
       } else {
         newElement.assignConstant(formalParamName, value, paramType);
@@ -478,6 +480,7 @@ public class ValueAnalysisTransferRelation
           if (!valueExists) {
             unknownValueHandler.handle(
                 memLoc.orElseThrow(), op1.getExpressionType(), newElement, v);
+            System.err.println("memLoc present");
 
           } else {
             newElement.assignConstant(
@@ -726,6 +729,7 @@ public class ValueAnalysisTransferRelation
 
     if (initialValue.isUnknown()) {
       unknownValueHandler.handle(memoryLocation, declarationType, newElement, getVisitor());
+      System.err.println("initial value unknown " + newElement.nonDeterministicMark);
     } else {
       newElement.assignConstant(memoryLocation, initialValue, declarationType);
     }
