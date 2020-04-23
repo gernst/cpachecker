@@ -10,8 +10,50 @@
 3. C-Program: 2 vars -> 1 var mit finalen zuständen (0 oder 1); andere wird nondeterm gewählt
 4. predicatecpa muss formel haben, welche constraints die zustände haben -> gibts das?; sollte nicht von konkreten werten abhängen
 
+zu 1. previous not known in super state -> clarify if parents are ok
+2. depends on 1.
+3. ok
+4. Yep, got predicate abstract state -> need to know how to get formula.
 
 
-Plan: Random sampling
+# 26.3.2020:
+1. previous state = state -> function ✅
+2. use getState() von ForwardingTransferRelation -> check if not null ✅ (if there is copy of state -> there is state)
+3. Irgendwo ein Formula-Manager -> den nehmen um die FOrmel an zu kucken
+   -> Definition von formeln in separatem Java-SMT (im Sosylab Repo)
+4. Was passiert mit assert oder ERROR Label?
+Globale Bedingunen wann die Analyse wahr oder falsch ist raus finden (properties)
+Auf svcomp-Seite beschrieben (ua. error reachability ) -> Datei unreachclall
 
-reachedSet ist Liste von States. Aus jedem State kann man alle var-Zustände ziehen.
+Nächstes Ettapenziel:
+Mit Code errors zu finden. Unreach-call.prp muss erfüllt werden -> __VERIFIER_error in programm enthalten
+-> svcomp/benchmarks als extern ... declarieren
+1. Fehler sofort dran kommmen lassen -> sollte jetzt sofort erkannt werden
+2. Programm, wo fehler nur für bestimmte Werte dran kommt (range an Werten).
+    -> Range realistisch wählen: Wertebereich von i32 / 8 oder / 10 -> hohe chance
+       nicht zu treffen -> _testet wiedereinfügen von zuständen damit Fehlerfall getroffen wird_
+3. Wird zentral ein random seed kontrolliert -> verschiedenen Seeds probieren als test
+für den funktionierenden Algorithmus (unterschiedliche Seeds-> unterschiedliche durchläufe)
+4. Wie wird der Reachability-Graph angezeigt? Nur der letzte Zustand angezeigt?
+5. 10 Minuten Antrittsvortrag
+    -> Mittwochs um 12:30
+    -> Was: SymExec + Fuzzer (Unterbrechung)
+    -> Warum: Beide VOrteil nutzen (schnell und korrekt, gute Abdeeckung -> Dirller paper
+    -> Wie: CPAChecker -> Legion Algorithmus, Abgrenzung Legion-Algo vs Dirller
+        -> Whitebox-Integration (vs Driller: AFL, lauf mal, aber Blackbox)
+    -> Highlight: Legion: Programmstelle auswählen, die interessant ist (deep vs flat)
+        -> Wie werden INputs generiert, die dadurch laufen
+        -> Nur highlight, nicht zu tief
+    -> Zeitplan machen
+    -> Englisch
+    -> Folien egal
+    -> Wenn demo, dann demo!
+    -> Ziel: Thema verstanden und Arbeit wird geschafft.
+
+Idee:
+SMT Solver liefern probleme für https://github.com/gernst/bvsampler formeln.
+Nimmt zufallswert -> sucht lösung für geratener Input -> sucht dann nächste Lösung
+
+# 2.4.
+Präsentation abstrakter, legion -> eine anwendung, aber auch randomsampling
+coverage messen?
