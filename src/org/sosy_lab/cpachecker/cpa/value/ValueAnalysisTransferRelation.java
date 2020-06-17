@@ -729,7 +729,6 @@ public class ValueAnalysisTransferRelation
 
     if (initialValue.isUnknown()) {
       unknownValueHandler.handle(memoryLocation, declarationType, state, newElement, getVisitor());
-      System.err.println("initial value unknown " + newElement.nonDeterministicMark);
     } else {
       newElement.assignConstant(memoryLocation, initialValue, declarationType);
     }

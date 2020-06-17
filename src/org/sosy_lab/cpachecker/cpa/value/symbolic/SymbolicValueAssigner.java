@@ -231,6 +231,7 @@ public class SymbolicValueAssigner implements MemoryLocationValueHandler {
       final CArrayType pArrayType,
       final ExpressionValueVisitor pValueVisitor
   ) throws UnrecognizedCodeException {
+    // TODO: this is how to generate a carray
 
     if (!handleArrays) {
       pState.forget(pArrayLocation);

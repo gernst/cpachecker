@@ -51,6 +51,7 @@ import org.sosy_lab.cpachecker.core.defaults.AbstractCPA;
 import org.sosy_lab.cpachecker.core.defaults.AutomaticCPAFactory;
 import org.sosy_lab.cpachecker.core.defaults.DelegateAbstractDomain;
 import org.sosy_lab.cpachecker.core.defaults.precision.VariableTrackingPrecision;
+import org.sosy_lab.cpachecker.core.interfaces.AbstractDomain;
 import org.sosy_lab.cpachecker.core.interfaces.AbstractState;
 import org.sosy_lab.cpachecker.core.interfaces.CPAFactory;
 import org.sosy_lab.cpachecker.core.interfaces.ConfigurableProgramAnalysisWithBAM;
@@ -74,6 +75,7 @@ import org.sosy_lab.cpachecker.cpa.value.symbolic.SymbolicValueAnalysisPrecision
 import org.sosy_lab.cpachecker.cpa.value.symbolic.SymbolicValueAnalysisPrecisionAdjustment.SymbolicStatistics;
 import org.sosy_lab.cpachecker.cpa.value.symbolic.SymbolicValueAssigner;
 import org.sosy_lab.cpachecker.cpa.value.symbolic.type.SymbolicValue;
+import org.sosy_lab.cpachecker.exceptions.CPAException;
 import org.sosy_lab.cpachecker.util.StateToFormulaWriter;
 import org.sosy_lab.cpachecker.util.states.MemoryLocation;
 import org.sosy_lab.cpachecker.util.states.MemoryLocationValueHandler;
@@ -100,7 +102,8 @@ public class ValueAnalysisCPA extends AbstractCPA
     RANDOM_VALUE,
   }
 
-  @Option(secure=true, name="merge", toUppercase=true, values={"SEP", "JOIN"},
+  // TODO: add a new value: CONCOLIC
+  @Option(secure=true, name="merge", toUppercase=true, values={"SEP", "JOIN", "CONCOLIC"},
       description="which merge operator to use for ValueAnalysisCPA")
   private String mergeType = "SEP";
 
@@ -258,7 +261,37 @@ public class ValueAnalysisCPA extends AbstractCPA
 
   @Override
   public MergeOperator getMergeOperator() {
-    return buildMergeOperator(mergeType);
+    // TODO: add new merge operator
+    String upper = mergeType.toUpperCase();
+    if (upper.equals("CONCOLIC")){
+      class ConcolicMergeOperator implements MergeOperator {
+        private final AbstractDomain domain;
+
+        /**
+         * Creates a merge-join operator, based on the given join
+         * operator
+         */
+        public ConcolicMergeOperator(AbstractDomain d) {
+          this.domain = d;
+          System.out.println("Merge Operator");
+        }
+
+        @Override
+        public AbstractState  merge(AbstractState el1, AbstractState el2, Precision p)
+        throws CPAException, InterruptedException {
+          // return domain.join(el1, el2);
+          System.out.println("CONCOLIC Join happening");
+          return el2;
+        }
+      }
+
+      ConcolicMergeOperator a = new ConcolicMergeOperator(getAbstractDomain());
+      
+      // throw new UnsupportedOperationException("Still to implement");
+      return a;
+    } else {
+      return buildMergeOperator(mergeType);
+    }
   }
 
   @Override
