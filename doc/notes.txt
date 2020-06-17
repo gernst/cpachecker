@@ -273,3 +273,7 @@ Nächster Schritt: Pfadformeln lösen
   Verify-This tasks dürften kein uB haben -> auf null initialisieren
     -> transition relation mit in den RVA -> call-edge für wann __VERIFIER_nondet_int
   1. Neue memory location: p + 0, p + 1 ...
+
+18.6.
+  -> check todos
+  -> are INT128 and FLOAT128 important?

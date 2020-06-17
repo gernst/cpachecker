@@ -295,7 +295,6 @@ public class ValueAnalysisTransferRelation
   protected ValueAnalysisState handleFunctionCallEdge(FunctionCallEdge callEdge,
       List<? extends AExpression> arguments, List<? extends AParameterDeclaration> parameters,
       String calledFunctionName) throws UnrecognizedCodeException {
-    // TODO christoph: dieser state braucht das flag -> visit again
     ValueAnalysisState newElement = ValueAnalysisState.copyOf(state);
 
     assert (parameters.size() == arguments.size())
@@ -327,10 +326,10 @@ public class ValueAnalysisTransferRelation
         if (isMissingCExpressionInformation(visitor, exp)) {
           addMissingInformation(formalParamName, exp);
         }
-        // TODO christoph an dieser Stelle steht fest, dass startzustand nichtdeterministisch
         unknownValueHandler.handle(formalParamName, paramType, state, newElement, visitor);
-        System.err.println(newElement.nonDeterministicMark);
-        state.nonDeterministicMark = newElement.nonDeterministicMark;
+        // Previous state has mark, this should suffice
+        // TODO check if ok
+        // state.nonDeterministicMark = newElement.nonDeterministicMark;
 
       } else {
         newElement.assignConstant(formalParamName, value, paramType);
@@ -480,7 +479,6 @@ public class ValueAnalysisTransferRelation
           if (!valueExists) {
             unknownValueHandler.handle(
                 memLoc.orElseThrow(), op1.getExpressionType(), state, newElement, v);
-            System.err.println("memLoc present");
 
           } else {
             newElement.assignConstant(
@@ -729,6 +727,11 @@ public class ValueAnalysisTransferRelation
 
     if (initialValue.isUnknown()) {
       unknownValueHandler.handle(memoryLocation, declarationType, state, newElement, getVisitor());
+      // If a nonDeterministic mark is set, remove it.
+      // If an element is initialized, it nonDet behaviour is expected.
+      // TODO check ok
+      state.nonDeterministicMark = false;
+      newElement.nonDeterministicMark = false;
     } else {
       newElement.assignConstant(memoryLocation, initialValue, declarationType);
     }
