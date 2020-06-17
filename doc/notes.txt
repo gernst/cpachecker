@@ -1,21 +1,3 @@
-1. Informationen recherschieren welche Informationen in dem reachedset drin sind.
-2. RandomUnknownValueHandler bauen und als UnknownValueHandler setzen.
-3. Zustände markieren in denen nichtdeterministische Eintscheidungen getroffen werden in ValueCPA / ValueAnalysisState
-4. Zustand vor dem markierten zustand muss nochmal besucht werden: die müssen am ende gesucht werden.
-    -> über das reachedset.reAddToWaitlist()
-10. 10x mal wiederholen.
-
-1. handle() interface ändern und auch vorgänger zustand übergeben und markieren, wenn nicht vorhanden: throw Exception
-2. korrekten Wrapped state wieder zur watchlist (überprüfen)
-3. C-Program: 2 vars -> 1 var mit finalen zuständen (0 oder 1); andere wird nondeterm gewählt
-4. predicatecpa muss formel haben, welche constraints die zustände haben -> gibts das?; sollte nicht von konkreten werten abhängen
-
-zu 1. previous not known in super state -> clarify if parents are ok
-2. depends on 1.
-3. ok
-4. Yep, got predicate abstract state -> need to know how to get formula.
-
-
 # 26.3.2020:
 1. previous state = state -> function ✅
 2. use getState() von ForwardingTransferRelation -> check if not null ✅ (if there is copy of state -> there is state)
@@ -57,3 +39,237 @@ Nimmt zufallswert -> sucht lösung für geratener Input -> sucht dann nächste L
 # 2.4.
 Präsentation abstrakter, legion -> eine anwendung, aber auch randomsampling
 coverage messen?
+
+# 23.04
+
+1. 3 Teile für Legion:
+    - Score die Zustände, Zuständig für die Auswahl welche Zustände gewählt werden.
+    - Random Sampling bzgl. gegebener Constraints
+    - Solution von Predicate CPA muss nach RandomValueAssigner / evtl. an transferRelation übergeben
+      u.U. handle() muss unterscheiden ob nonDetInt assignment
+
+TODO: 
+    Wie sind memory locations, wenn in Schleife? Wie heißen die, wie wird Variable gekennzeichnet
+    wenn mehrfach vorbei kommend?
+
+    E-Mail mit folgendem: Wie kann eine Memory-Location in der ValueAnalysis einer
+    Variable in der PredicateAnalysis zugeordnet werden?
+    Philip Wendler + THomas Lemberger
+
+    Paper lesen für CoVeriTest und HybridTiger -> https://test-comp.sosy-lab.org/2020/systems.php
+    - HybridTiger:
+      Generate test cases with reachability analysis until every reachable test goal ist covered.
+      Uses CPAChecker counterexample generation to extract a test case.
+
+    - CoVeriTest:
+      a
+
+    RandomValueAssigner braucht Map, welche Variable welchen Wert bekommt.
+    NichtRandomValueAssigner, der Variablenbelegungen vorgesetzt bekommt. Mit diesen befüllt er
+    Memory-Locations solange es welche gibt. Danach wieder Random.
+
+Zustand nach Fallunterscheidung wird nach Score-Function ausgewählt.
+
+Ablauf:
+#. 
+
+Fragen:
+  - Ist symbolic Execution der richtige Begriff? Nicht mehr 'statische Analyse'?
+    Bessere unterscheidung?
+  - 10 Minuten mit oder ohne Fragen?
+
+
+1.5.2020:
+ - Welcher edge-call wird aufgerufen? Hat man beim Aufruf, welche function den RVA aufgerufen hat? Wenn man das weis,
+  kann man das Namensschema benutzen.
+
+  Präsentation:
+    - keine Animationen
+    - Wie würde Symbolic Execution neue Pfade finden?
+    - Vorteile von symExec können daran gezeigt werden (*Evaluate complex Conditions*): gezielte Ausfürhung
+      eines Branches.
+    - Geziehlt ist gut, aber muss für jede Koordinate gemacht werden: und das kann der Fuzzer, Koordinaten finden.
+    - SymExec wählt einen Punkt, Fuzzing exploriert dann.
+    - Und wie: Quicksampler. 
+    - 2 Fragen zu lösen: wo gehen wir hin mit Symexec?
+                         Energieverschwendungn vom dummen Fuzzing in einem Branch.
+                         zu tief mit der SymExec -> zu teuer, Fuzzing keinen Platz mehr
+                         Von a nach b springen, interessante dinge Fuzzen weil billig
+    - Initial: wir haben naive Methode, um INput zu generieren. Punkt ist impmenentierung in CPAChecker (=Quicksampler in CPAChecker)
+      1. MCTS: Score function, welcher Knoten ausgesucht wird.
+      2. Quicksampler: generiert die Werte
+    - Focus auf CPAChecker
+    - ✅ Related WOrk: 1 FOlie, Driller am ähnlichsten. 2 UNterschiede: Driller -> kein MCTS und kein Quicksampler (naiv).
+                             für MCTS: wenn fuzzer nicht mehr weiter kommt, ists wohl interessant (reaktiv, != proaktiv).
+                              -> wir machen proaktives "haben pfade, gib mir mehr"
+                            für Quicksampler: Driller generiert nur eine Eingabe und keinen Einfluss auf ob der Fuzzer das kaputt 
+                             -> wir machen das gleiche aber mit angepasster mutationsstrategie
+    - Zeitplan gröber machen
+    - Wie wird Evaluiert? Einfach testcompbenchmarks hernehmen. Ziel ist coverage coverage coverage!    
+
+  in https://meet.lrz.de/sosy
+
+ - ✅ generate input to solve ... -> generate many solutions for path constraints cheaply
+ - ✅ Quickcheck -> Quicksampler
+ - ✅ Driller: Referenz einfügen
+ - Vergleich Fuzzing - Symexec: SymExec wählt einen Punkt, Fuzzing exploriert dann.
+ - ✅ Zeitplan vereinfachen
+ - ✅ Evaluation
+ - https://link.springer.com/chapter/10.1007%2F978-3-030-16722-6_23 -> Coveritest for sharing results
+ - Parallelizing: Karl-Heinz: BAM Concept
+
+# 07.05.2020
+ - Was wenn Variablennummerierung verwenden? -> die werden auf jeden Fall der Reihe nach nummeriert.
+   Coveritest: die machen das prob. so.
+ - Automaton zu Prädikatenanalyse (und alle anderen) zuschaltbar: kann via CFA steuern (ignorieren fürs erste; Thomas Lemberger fragen)
+
+Todo:
+ - Welcher edge-call wird aufgerufen? Hat man beim Aufruf, welche function den RVA aufgerufen hat? Wenn man das weis,
+   kann man das Namensschema benutzen. Kann man an Kanten entdecken ob NonDetInt
+ - Strengthen(ing) Mechanismus: kommunikation zwischen 2 CPAs? Geeignet für neue Infos an RVA?
+ - Quicksampler Paper lesen.
+ 
+# Meeting 13.05.
+ - external Tool => postponed
+ - extra Automata in CPAChecker
+ - HOw to integrate ValueAnalysis + PredicateAnalysis
+   -> Witness to counterexample could be a starting point
+ - Fuzzing Strategies => postponed
+
+ Coveritest: TestCaseGeneratorAlgorithm
+ Important Classes:
+  TestCaseExporter#writeTestCase`
+  final Path pFile,
+        final ARGPath pTargetPath,
+        final CounterexampleInfo pCexInfo,
+  ...
+  `HarnessExporter#extractTestVector`
+  `TestCaseGeneratorAlgorithm` -> 162: Loop tests if all have been covered, if not: builds more tests
+
+  Testtarget can be cfa-Edge or location
+  
+  To switch between Algorithms: use RestartAlgorithm with LImits (e.g. Time limit for both algorithms)
+  -> how to exchange Information between those?
+    -> conditional Verification
+
+  `AssumptionStorageCPA` is needed for `AssumptionCollectorAlgorithm'.
+  `AssumptionCollectorAlgorithm' creates Assumptions and writes them to a Condition based on the arg
+
+  ReachedSet == ARGs
+  Traversing it is intended (wihtout considering it is a loop):
+    *`ARGUtils' provides tools to work with ARGUtils*
+  You also have `PathIterator`
+  PathIterator is used with `ARGPath`, e.g., `ARGPath#fullPathIterator`
+
+  Construct top half of reachedSet with PredicateAnalysis
+    -> then run on fresh ReachedSet with Fuzzing step (maybe with `NestingAlgorithm` / `NestingAlgorithm#createAlgorithm`)
+
+  Adjustable Precision: Swtich between 2 CPAs?
+    -> throw away Precision
+    -> keep path forumals
+    -> 
+
+Do Statistics via global logging. Ugly, but works. Later -> nicer datastructure.
+Pred + ValueAnalysis:
+  Path Formulas from Pred - Values from Value
+
+Good Idea: 
+  Throw away old value if we are in the same place.
+
+Verify: 
+
+Chat Log:
+sounds good, see you there
+15:17
+Martin S.
+works for me
+15:17
+Gidon Ernst
+1) postponed: Legion as a conditional tester
+15:24
+Thomas
+`TestCaseExporter#writeTestCase`
+final Path pFile,
+      final ARGPath pTargetPath,
+      final CounterexampleInfo pCexInfo,
+...
+`HarnessExporter#extractTestVector`
+`TestCaseGeneratorAlgorithm`
+162
+`TestTargetCPA` generates the individual test targets and the TestCaseGeneratorAlgorithm takes the test goals from there
+15:37
+Martin S.
+I think I cannot contribute much and have lots of work to do => I will leave now and wish you a productive rest of the meeting!
+15:45
+Thomas
+`AssumptionStorageCPA`
+`AssumptionCollectorAlgorithm`
+`ARGUtils`
+You also have `PathIterator`
+PathIterator is used with `ARGPath`, e.g., `ARGPath#fullPathIterator`
+15:55
+Dirk Beyer
+Correct. Does not work.
+15:57
+Thomas
+`NestingAlgorithm`
+15:58
+Dirk Beyer
+Convert ARGs?
+15:58
+Thomas
+more specifically, `NestingAlgorithm#createAlgorithm`
+15:58
+Gidon Ernst
+__VERIFIER_nondet_int!59
+__VERIFIER_nondet_int!63
+
+
+# 14.05.:
+MergeOperator: definieren
+
+Concolic Execution -> symbolische werte aber konkrete Pfade
+
+Todo:
+  - Add new join type in ValueAnalysisCPA.java
+  - Add new merge operator in ValueAnalysisCPA.getMergeOperator()
+  - Neue Merge Operator Klasse (als inline Klasse)
+
+  Feststellen, ob MergeOperator Funktioniert: ARG anzeigen können
+  -> schauen, ob im Output zu sehen ist, ob neue States pro Ausführung hinzugefügt werden
+     Die neuen states sollen in Zukunft joined werden.
+
+  PathCPA: neue CPA, neues Package path/PathCPA. Kopieren von der LocationCPA
+  Testprogram: if(...) { a } else {b} ; c
+
+  Quicksampler: https://github.com/gernst/bvsampler
+
+  Einfach mal merge-sep für die Prädikatenanalyse setzen + merge-concolic für die ValueAnalysis
+  CFAPathCPA
+
+28.5.2020
+
+ - großes Program testen: svbenchmark z.B.? Iterationsmenge Testen -> eca rers / array-crafted
+ - nondet vll erweitern auf short / longs 
+
+Nächster Schritt: Pfadformeln lösen
+ Wie?
+ java-smt bibliothek weis das, siehe docs bzw github
+ -> Vll stellt PredicateAnalysis schon einen solver bereit, kucken ob der Solver an der Formel hängt
+ -> Formel hängt an Solver+Context (SolverContextFormulaFactory?) oder counterexample solver
+ -> Model (Formelbelegung das Formel wahr macht)
+ -> Proover-Env: get model siehe https://github.com/sosy-lab/java-smt/blob/093ac2589b21def3b38b7723e06bfc0505289a09/src/org/sosy_lab/java_smt/test/ModelTest.java#L374
+
+ -> bei ~ reAddToWaitlist -> lass 1 Formel ausgeben + ein Model
+ -> einfach initialen zurück auf die Waitlist damit komplett von vorne
+ -> auch Zusände mit mehr als einem Nachfolger testen mit reAddToWaitlist
+  -> davon einen Nachfolger in die Waitlist
+
+4.6.
+ - Array: MemoryLocation anschauen
+ - 
+
+12.6.
+  Verify-This tasks dürften kein uB haben -> auf null initialisieren
+    -> transition relation mit in den RVA -> call-edge für wann __VERIFIER_nondet_int
+  1. Neue memory location: p + 0, p + 1 ...
