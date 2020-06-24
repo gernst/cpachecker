@@ -286,3 +286,11 @@ Nächster Schritt: Pfadformeln lösen
 25.6.
   -> prover is working
   -> Connected RVA -> Legion Algorithm
+  -> Wann kommen infos vom Prover?
+
+  Todo:
+    - Korrelation zwischen RVA und Legion: Woher weis der preloaded RVA wie die Variable heißt?
+      -> Memlocation ist in RVA bekannt
+      -> ValueAnalysisState vs hat constantsMap, zu der wurde NumericValue zugewiesen
+      -> der Proover muss lösungen für aktuelle Variablen zurück geben
+      -> tut er, model.modelAssignments.*.name ist der name
