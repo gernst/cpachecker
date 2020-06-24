@@ -282,3 +282,7 @@ Nächster Schritt: Pfadformeln lösen
     - RandomValueAssigner:128
     - Get sovler from CPA, like BMCAltorithm:159 & CoreComponentsFactory:345
     - How to get information from prover-model to RVA
+
+25.6.
+  -> prover is working
+  -> Connected RVA -> Legion Algorithm
