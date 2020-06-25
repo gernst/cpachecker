@@ -277,14 +277,13 @@ public class ValueAnalysisCPA extends AbstractCPA
          */
         public ConcolicMergeOperator(AbstractDomain d) {
           this.domain = d;
-          System.out.println("Merge Operator");
         }
 
         @Override
         public AbstractState  merge(AbstractState el1, AbstractState el2, Precision p)
         throws CPAException, InterruptedException {
           // return domain.join(el1, el2);
-          System.out.println("CONCOLIC Join happening");
+          logger.log(Level.FINE, "CONCOLIC Join happening");
           return el2;
         }
       }

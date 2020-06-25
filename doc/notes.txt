@@ -297,7 +297,9 @@ Nächster Schritt: Pfadformeln lösen
     - Wann solved der Proover?:
 
     - Refactor: n random durchläufe machen am Anfang, da immer initial Stage auf waitlist
-      -> damit arg teilweise ausgefaltet
-      -> dann zufällig einen non-det zustand auswählen
+      ! damit arg teilweise ausgefaltet
+      ✅> dann zufällig einen non-det zustand auswählen
       -> für diesen den Path-Constraint lösen (10x, iM eine Lösung, iM 1x)
-      -> platzhalter für auswahl welcher nondet state
+      ✅> platzhalter für auswahl welcher nondet state
+
+    RVA only called once at startup
