@@ -303,3 +303,14 @@ Nächster Schritt: Pfadformeln lösen
       ✅> platzhalter für auswahl welcher nondet state
 
     RVA only called once at startup
+
+2.7.2020:
+  -> Die Entscheidung wann ein State nicht nochmal besucht wurde u.U. ändern?
+    -> Gleichheit auf VA States
+  -> Warum werden States nicht gemerged? Eine nondet_int, 3 ARG abzweiungen,
+     debuggen, warum nicht gemerged wird.
+     -> testen mit jedes mal 0 zurück geben
+  -> RVA preloading testen ob Reihenfolge korrekt
+
+  Done:
+    - ValueAnalysisState:434 compares VA states: but always true
