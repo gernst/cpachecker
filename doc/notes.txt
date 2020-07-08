@@ -314,3 +314,8 @@ Nächster Schritt: Pfadformeln lösen
 
   Done:
     - ValueAnalysisState:434 compares VA states: but always true
+
+9.7.2020
+  Fragen:
+    - name sanitizing: remove numbers and '@'?
+    - clear loaded Values after each iteration?
