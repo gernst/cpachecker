@@ -797,6 +797,8 @@ public abstract class AbstractExpressionValueVisitor
     CExpression functionNameExp = pIastFunctionCallExpression.getFunctionNameExpression();
 
     // We only handle builtin functions
+    // TODO christoph kucken ob calledFunctionName == nondet_int
+    // Wenn es einer von denen
     if (functionNameExp instanceof CIdExpression) {
       String calledFunctionName = ((CIdExpression) functionNameExp).getName();
 

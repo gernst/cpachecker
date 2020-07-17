@@ -319,3 +319,22 @@ Nächster Schritt: Pfadformeln lösen
   Fragen:
     - name sanitizing: remove numbers and '@'?
     - clear loaded Values after each iteration?
+    - For ARG?
+
+  Todo:
+    - überprüfen, ob indices global monoton ansteigend
+      -> wenn ja, im RVA sortierte Liste
+    - 2 Modi:
+      - sobald fehler gefunden haben: abruch
+      - max 15min runtime -> hohe coverage
+    - wie kommt man an Coverage?
+    -> RVA bekommt liste von listen: jede liste ist ein durchlauf
+       eher legion-algorithmus merkt sich liste von listen für zuweisungen
+       RVA bekommt diese dann vor jeden fuzzing lauf
+
+10.7.2020
+  - ExpressionValueVisitor Liste übergeben, der soll die zuweisung machen
+  - Infos müssen an den durch die ValueAnalysisCPA und ValueAnalysisTransferRelation
+    durchgeschleift werden
+
+  
