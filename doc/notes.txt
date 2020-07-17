@@ -289,8 +289,33 @@ Nächster Schritt: Pfadformeln lösen
   -> Wann kommen infos vom Prover?
 
   Todo:
-    - Korrelation zwischen RVA und Legion: Woher weis der preloaded RVA wie die Variable heißt?
+    ✅ Korrelation zwischen RVA und Legion: Woher weis der preloaded RVA wie die Variable heißt?
       -> Memlocation ist in RVA bekannt
       -> ValueAnalysisState vs hat constantsMap, zu der wurde NumericValue zugewiesen
       -> der Proover muss lösungen für aktuelle Variablen zurück geben
       -> tut er, model.modelAssignments.*.name ist der name
+    - Wann solved der Proover?:
+
+    - Refactor: n random durchläufe machen am Anfang, da immer initial Stage auf waitlist
+      ! damit arg teilweise ausgefaltet
+      ✅> dann zufällig einen non-det zustand auswählen
+      -> für diesen den Path-Constraint lösen (10x, iM eine Lösung, iM 1x)
+      ✅> platzhalter für auswahl welcher nondet state
+
+    RVA only called once at startup
+
+2.7.2020:
+  -> Die Entscheidung wann ein State nicht nochmal besucht wurde u.U. ändern?
+    -> Gleichheit auf VA States
+  -> Warum werden States nicht gemerged? Eine nondet_int, 3 ARG abzweiungen,
+     debuggen, warum nicht gemerged wird.
+     -> testen mit jedes mal 0 zurück geben
+  -> RVA preloading testen ob Reihenfolge korrekt
+
+  Done:
+    - ValueAnalysisState:434 compares VA states: but always true
+
+9.7.2020
+  Fragen:
+    - name sanitizing: remove numbers and '@'?
+    - clear loaded Values after each iteration?

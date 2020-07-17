@@ -4,14 +4,29 @@ int main() {
   
     int a = __VERIFIER_nondet_int();
     int b = 0;
-
-    int c;
-    if (a < -1610612736){
-      b = __VERIFIER_nondet_int();
-    } else {
-      b = 2;
+    if (a < 0){
+            // -1913767021
+            // -1342231855
+      int b = __VERIFIER_nondet_int();
+      if (b < -1610612736){
+        a = 3;
+      }
+      // __VERIFIER_error();
+      // b = 1;
     }
+    // if (a < -2415919104){
+    //   b = 2;
+    // }
 
+    // if (a < -2516019105) {
+    //   b = 3;
+    // }
+
+    // else {
+    //   a = 2;
+    // }
+
+    // int c;
     // int b;
     // b = 0;
     // b = __VERIFIER_nondet_int();

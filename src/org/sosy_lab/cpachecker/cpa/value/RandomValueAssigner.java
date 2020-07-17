@@ -23,6 +23,7 @@
  */
 package org.sosy_lab.cpachecker.cpa.value;
 
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.logging.Level;
@@ -53,7 +54,7 @@ public final class RandomValueAssigner implements MemoryLocationValueHandler {
 
   private Random rnd;
   private final LogManager logger;
-  private HashMap<String,Value> loadedValues = new HashMap<String,Value>();
+  private HashMap<String,Value> loadedValues = new HashMap<>();
 
   @Option(
     description = "If this option is set to true, an own symbolic identifier is assigned to"
@@ -97,6 +98,15 @@ public final class RandomValueAssigner implements MemoryLocationValueHandler {
       @Nullable ExpressionValueVisitor pValueVisitor)
       throws UnrecognizedCodeException {
 
+    // If the value is preloaded, do not generate a new one and assign
+    // the already existing one.
+    Value preload = loadedValues.get(pMemLocation.toString());
+    if (preload != null) {
+      pState.assignConstant(pMemLocation, preload, pType);
+      logger.log(Level.INFO, "Reused preloaded value", preload, pMemLocation);
+      return;
+    }
+
     if (pType instanceof CSimpleType) {
       createSimpleType(pMemLocation, pType, pPreviousState, pState);
       return;
@@ -128,9 +138,30 @@ public final class RandomValueAssigner implements MemoryLocationValueHandler {
       loadedValues.put(name, new NumericValue((Float)value));
     } else if (value instanceof Double) {
       loadedValues.put(name, new NumericValue((Double)value));
+    } else if (value instanceof BigInteger) {
+      BigInteger v = (BigInteger)value;
+      String n = sanitize(name);
+      loadedValues.put(n, new NumericValue(v));
+      logger.log(Level.INFO, "Preloaded to ", n, v);
     } else {
-      throw new IllegalArgumentException("Did not recognize value for loadedValues Map.");
+      throw new IllegalArgumentException(String.format("Did not recognize value for loadedValues Map: %s.", value.getClass()));
     }
+  }
+
+  public void clearPreLoaded(){
+    loadedValues.clear();
+  }
+
+  private String sanitize(String name){
+    while (Character.isDigit(name.charAt(name.length()-1))) {
+      name = name.substring(0, name.length()-1);
+    }
+
+    if (name.charAt(name.length()-1) == '@') {
+      name = name.substring(0, name.length()-1);
+    }
+
+    return name;
   }
 
   /**
