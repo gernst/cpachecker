@@ -24,56 +24,61 @@ import static org.sosy_lab.java_smt.test.ProverEnvironmentSubject.assertThat;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
 import java.util.logging.Level;
-
 
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.common.configuration.Configuration;
 import org.sosy_lab.common.configuration.InvalidConfigurationException;
+import org.sosy_lab.common.configuration.Option;
 import org.sosy_lab.common.configuration.Options;
 import org.sosy_lab.common.log.LogManager;
 import org.sosy_lab.cpachecker.core.algorithm.Algorithm;
-import org.sosy_lab.cpachecker.core.interfaces.AbstractState;
+import org.sosy_lab.cpachecker.core.algorithm.legion.selection.RandomSelectionStrategy;
+import org.sosy_lab.cpachecker.core.algorithm.legion.selection.Selector;
 import org.sosy_lab.cpachecker.core.interfaces.ConfigurableProgramAnalysis;
 import org.sosy_lab.cpachecker.core.interfaces.Property;
 import org.sosy_lab.cpachecker.core.reachedset.ReachedSet;
-import org.sosy_lab.cpachecker.cpa.location.LocationState;
-import org.sosy_lab.cpachecker.cpa.predicate.PredicateAbstractState;
 import org.sosy_lab.cpachecker.cpa.predicate.PredicateCPA;
-import org.sosy_lab.cpachecker.cpa.value.RandomValueAssigner;
 import org.sosy_lab.cpachecker.cpa.value.ValueAnalysisCPA;
-import org.sosy_lab.cpachecker.cpa.value.ValueAnalysisState;
 import org.sosy_lab.cpachecker.cpa.value.type.BooleanValue;
 import org.sosy_lab.cpachecker.cpa.value.type.NumericValue;
 import org.sosy_lab.cpachecker.cpa.value.type.Value;
 import org.sosy_lab.cpachecker.exceptions.CPAEnabledAnalysisPropertyViolationException;
 import org.sosy_lab.cpachecker.exceptions.CPAException;
-import org.sosy_lab.cpachecker.util.AbstractStates;
 import org.sosy_lab.cpachecker.util.CPAs;
 import org.sosy_lab.cpachecker.util.predicates.smt.Solver;
 import org.sosy_lab.java_smt.api.BooleanFormula;
 import org.sosy_lab.java_smt.api.Model;
+import org.sosy_lab.java_smt.api.Model.ValueAssignment;
 import org.sosy_lab.java_smt.api.ProverEnvironment;
 import org.sosy_lab.java_smt.api.SolverContext.ProverOptions;
 import org.sosy_lab.java_smt.api.SolverException;
-import org.sosy_lab.java_smt.api.Model.ValueAssignment;
 
-@Options(prefix = "cpa.value.legion")
+@Options(prefix = "legion")
 public class LegionAlgorithm implements Algorithm {
     private final Algorithm algorithm;
     private final LogManager logger;
-    private final int maxIterations;
     @SuppressWarnings("unused")
     private final ConfigurableProgramAnalysis cpa;
     private Solver solver;
-    private int initialPasses;
-    private int fuzzingPasses;
     @SuppressWarnings("unused")
     private ShutdownNotifier shutdownNotifier;
     private ValueAnalysisCPA valCpa;
+
+
+    @Option(secure=true, name="selectionStrategy", toUppercase=true, values={"RAND"},
+      description="which selection strategy to use to get target states.")
+    private String selectionStrategyOption = "RAND";
+    private Selector selectionStrategy;
+
+    @Option(secure=true, description="How many passes to fuzz before asking the solver for the first time.")
+    private int initialPasses = 3;
+
+    @Option(secure=true, description="How often to run the fuzzer within each iteration.")
+    private int fuzzingPasses = 5;
+
+    @Option(secure=true, description="How many total iterations of [select, target, fuzz] to perform.")
+    private int maxIterations = 5;
 
     public LegionAlgorithm(
             final Algorithm algorithm,
@@ -85,20 +90,20 @@ public class LegionAlgorithm implements Algorithm {
         this.algorithm = algorithm;
         this.logger = pLogger;
         this.shutdownNotifier = shutdownNotifier;
-        this.initialPasses = 3;
-        this.fuzzingPasses = 5;
-        this.maxIterations = 5;
         this.cpa = cpa;
 
-        pConfig.inject(this);
+        pConfig.inject(this, LegionAlgorithm.class);
 
-        // Fetch sovler from predicate CPA
+        // Fetch solver from predicate CPA
         PredicateCPA predCpa =
                 CPAs.retrieveCPAOrFail(cpa, PredicateCPA.class, LegionAlgorithm.class);
         this.solver = predCpa.getSolver();
 
-        // Get UVA from Value Analysis
+        // Get value cpa
         valCpa = CPAs.retrieveCPAOrFail(cpa, ValueAnalysisCPA.class, LegionAlgorithm.class);
+
+        // Set selection Strategy
+        selectionStrategy = buildSelectionStrategy();
     }
 
     @Override
@@ -123,9 +128,9 @@ public class LegionAlgorithm implements Algorithm {
         for (int i = 0; i < maxIterations; i++) {
             logger.log(Level.INFO, "Iteration", i + 1);
             // Phase Selection: Select non_det for path solving
-            AbstractState target;
+            BooleanFormula target;
             try {
-                target = selectTarget(reachedSet, SelectionStrategy.RANDOM);
+                target = selectionStrategy.select(reachedSet);
             } catch (IllegalArgumentException e) {
                 logger.log(Level.WARNING, "No target state found");
                 return status;
@@ -155,60 +160,16 @@ public class LegionAlgorithm implements Algorithm {
     }
 
     /**
-     * Select a state to target based on the targetting strategy.
-     * 
-     * @param pReachedSet A set of states to choose targets from.
-     * @param pStrategy   How to select a target.
-     */
-    private AbstractState selectTarget(ReachedSet pReachedSet, SelectionStrategy pStrategy) {
-
-        if (pStrategy == SelectionStrategy.RANDOM) {
-            LinkedList<AbstractState> nonDetStates = new LinkedList<>();
-            for (AbstractState state : pReachedSet.asCollection()) {
-                ValueAnalysisState vs =
-                        AbstractStates.extractStateByType(state, ValueAnalysisState.class);
-                if (vs.nonDeterministicMark) {
-                    nonDetStates.add(state);
-                }
-            }
-            int rnd = new Random().nextInt(nonDetStates.size());
-            AbstractState target = nonDetStates.get(rnd);
-            logger.log(
-                    Level.INFO,
-                    "Target: ",
-                    AbstractStates.extractStateByType(target, LocationState.class));
-            return nonDetStates.get(rnd);
-        }
-        return null;
-    }
-
-    LinkedList<AbstractState> getNondetStates(ReachedSet pReachedSet) {
-        LinkedList<AbstractState> nonDetStates = new LinkedList<>();
-        for (AbstractState state : pReachedSet.asCollection()) {
-            ValueAnalysisState vs =
-                    AbstractStates.extractStateByType(state, ValueAnalysisState.class);
-            if (vs.nonDeterministicMark) {
-                logger.log(Level.INFO, "Nondet state", vs.getConstants().toString());
-                nonDetStates.add(state);
-            }
-        }
-        return nonDetStates;
-    }
-
-    /**
      * Ask the SAT-solver to compute path constraints for the pTarget.
      * 
-     * @param pTarget State to solve path constraints for.
+     * @param target The formula leading to the selected state.
      * @param pProver The prover to use.
      * @throws InterruptedException, SolverException
      */
-    private Model solvePathConstrains(AbstractState pTarget, ProverEnvironment pProver)
+    private Model solvePathConstrains(BooleanFormula target, ProverEnvironment pProver)
             throws InterruptedException, SolverException {
         logger.log(Level.INFO, "Solve path constraints.");
-        PredicateAbstractState ps =
-                AbstractStates.extractStateByType(pTarget, PredicateAbstractState.class);
-        BooleanFormula f = ps.getPathFormula().getFormula();
-        pProver.push(f);
+        pProver.push(target);
         assertThat(pProver).isSatisfiable();
         return pProver.getModel();
     }
@@ -277,5 +238,14 @@ public class LegionAlgorithm implements Algorithm {
         }
 
         return pReachedSet;
+    }
+
+    Selector buildSelectionStrategy(){
+        if (selectionStrategyOption.equals("RAND")){
+            return new RandomSelectionStrategy(logger);
+        }
+        throw new IllegalArgumentException(
+            "Selection strategy " + selectionStrategyOption + " unknown"
+            );
     }
 }
