@@ -5,7 +5,8 @@ int main() {
   if (a == 0){
     int b = __VERIFIER_nondet_int();
     if (b < -1610612736){
-      return;
+      a = 2;
+      // __VERIFIER_error();
     }
   }
 
